@@ -1,0 +1,21 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="Craswell.targets" />
+
+	<PropertyGroup>
+		<Platform>x86</Platform>
+		<BuildFolder>src</BuildFolder>
+		<Solution>Craswell.ServiceFramework</Solution>
+		<SolutionUri>git@github.com:scraswell/Craswell.ServiceFramework.git</SolutionUri>
+	    <SolutionFile>Craswell.ServiceFramework.sln</SolutionFile>
+		<Application>Craswell.ServiceFramework.Sample</Application>
+		<PackageArchive>$(Application).tar.bz2</PackageArchive>
+		<StagingFolder>Staging</StagingFolder>
+	    <Prefix>PREFIX</Prefix>
+	    <Configuration>Debug</Configuration>
+	    <BuildOutput>$(BuildFolder)\$(Application)\bin\$(Configuration)</BuildOutput>
+	    <DistFolder>_DIST</DistFolder>
+	    <DistPrefix>$(DistFolder)\$(Prefix)</DistPrefix>
+	    <BinFolder>$(DistPrefix)\bin</BinFolder>
+	    <ApplicationFolder>$(DistPrefix)\lib</ApplicationFolder>
+	</PropertyGroup>
+</Project>

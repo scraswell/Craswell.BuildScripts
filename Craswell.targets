@@ -1,0 +1,79 @@
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+	<Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
+	
+	<PropertyGroup Condition="$(ProjectBranch) = ''">
+		<ProjectBranch>master</ProjectBranch>
+	</PropertyGroup>
+
+	<PropertyGroup Condition="$(BuildFolder) = ''">
+		<BuildFolder>src</BuildFolder>
+	</PropertyGroup>
+
+	<Target Name="BuildSolution">
+		<Message Text="Building solution $(Solution)..." />
+		<Exec Command="xbuild /t:Build $(SolutionFile)" WorkingDirectory="$(BuildFolder)" />
+	</Target>
+
+	<Target Name="Clone">
+		<RemoveDir Condition="Exists('$(BuildFolder)')"
+			Directories="$(BuildFolder)" />
+
+		<Message Text="Recursively cloning $(Solution) from $(SolutionUri) using branch $(ProjectBranch)..." />
+
+		<Exec Command="git clone --recursive -b $(ProjectBranch) $(SolutionUri) $(BuildFolder)" />
+	</Target>
+
+	<Target Name="NuGetRestore">
+		<Message Text="Recursively cloning $(Solution) from $(SolutionUri) using branch $(ProjectBranch)..." />
+
+		<Exec Command="nuget restore" WorkingDirectory="$(BuildFolder)" />
+	</Target>
+
+	<Target Name="RemoveStagingDirectory">
+		<Message Text="Removing staging directory $(StagingFolder)..." />
+		<RemoveDir Directories="$(StagingFolder)" />
+	</Target>
+
+	<Target Name="RemoveSources">
+		<Message Text="Removing sources in $(BuildFolder)..." />
+		<RemoveDir Directories="$(BuildFolder)" />
+	</Target>
+
+	<Target Name="CleanSolution">
+		<Message Text="Cleaning solution $(Solution)..." />
+		<Exec Command="xbuild /t:Clean $(SolutionFile)" WorkingDirectory="$(BuildFolder)"  />
+	</Target>
+
+	<Target Name="RebuildSolution"
+		DependsOnTargets="CleanSolution">
+		<Message Text="Cleaning solution $(Solution)..." />
+		<Exec Command="xbuild /t:Rebuild $(SolutionFile)" WorkingDirectory="$(BuildFolder)" />
+	</Target>
+
+	<Target Name="CopyApplication"	DependsOnTargets="RebuildSolution">
+		<ItemGroup>
+			<Files Include="$(BuildFolder)\$(Application)\bin\$(Configuration)\*.exe;
+				$(BuildFolder)\$(Application)\bin\$(Configuration)\*.mdb;
+				$(BuildFolder)\$(Application)\bin\$(Configuration)\*.dll;
+				$(BuildFolder)\$(Application)\bin\$(Configuration)\*.config;" />
+		</ItemGroup>
+
+		<Copy
+			SourceFiles="@(Files)"
+			DestinationFolder="$(StagingFolder)\$(Application)" />	
+	</Target>
+
+	<Target Name="ArchiveSolution" DependsOnTargets="CopyApplication">
+		<Message Text="Archiving solution $(Solution)..." />
+
+		<Exec
+			Command="tar -cjvf &quot;$(TMPDIR)$(PackageArchive)&quot; -C &quot;$(StagingFolder)&quot; ." />
+		<Copy
+			SourceFiles="$(TMPDIR)$(PackageArchive)"
+			DestinationFolder="." />
+	</Target>
+
+	<Target Name="PackageSolution"
+		DependsOnTargets="Clone;NuGetRestore;ArchiveSolution;CleanSolution;RemoveSources;RemoveStagingDirectory">
+	</Target>
+</Project>
